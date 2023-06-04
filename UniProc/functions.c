@@ -3,6 +3,10 @@
 #include <string.h>
 #include "header.h"
 
+#define bool int
+#define false 0
+#define true 1
+
 // realLen is a function that counts the real number of character in a string, not the bytes as strelen do
 // input : a string
 // output : string length as number of character
@@ -42,7 +46,8 @@ int realLen(char *string)
 Text createText(FILE *in, int col_w)
 {
     // buffer for current character
-    char c;
+    char c = ' ';
+    bool newlineFlag = false;
     // prev_c is used as a flag so i count every block of sequential spaces as one space
     char prev_c = '\0';
 
@@ -62,6 +67,12 @@ Text createText(FILE *in, int col_w)
     // I read the character and trace length and int line_offset = 0;
     while ((c = fgetc(in)) != EOF)
     {
+
+        if (c != '\n' && c != '\r')
+        {
+            newlineFlag = 0;
+        }
+
         if (c == ' ' && prev_c == ' ')
         {
             // manage block of sequential spaces jumping to next character without going on with this iteration
@@ -95,7 +106,7 @@ Text createText(FILE *in, int col_w)
         {
             // Space character
             // if i have enough space to add the word to the current line (considering it without the last space)
-            if (word_length + line_length - 1 <= col_w)
+            if (word_length + line_length <= col_w)
             {
                 memcpy(line_buffer + line_size, word_buffer, word_size);
                 line_size += word_size;
@@ -129,7 +140,7 @@ Text createText(FILE *in, int col_w)
 
                 // CONTROL IF WORD IS TOO LONG FOR THE COL_W
                 if (realLen(text.rows[line_offset]) > col_w)
-                {   
+                {
                     // return a text with a NULL pointer as first string
                     text.rows[0] = NULL;
                     return text;
@@ -137,14 +148,16 @@ Text createText(FILE *in, int col_w)
             }
         }
         // managing the first newline
-        if (c == '\n' && line_size > 0)
+        if (c == '\n' && line_size > 0 && newlineFlag == 0)
         {
             memcpy(text.rows[line_offset], line_buffer, line_size);
             line_size = 0;
         }
+
         // managing the newline between paragraph
-        else if (c == '\n' && line_size == 0)
+        else if (c == '\n' && line_size == 0 && newlineFlag == 0)
         {
+            newlineFlag = 1;
             line_offset += 2;
             text.rows = (char **)realloc(text.rows, (line_offset + 2) * sizeof(char *));
             text.rows[line_offset - 1] = (char *)calloc((col_w + 1) * 4, sizeof(char));
@@ -172,6 +185,7 @@ Text createText(FILE *in, int col_w)
     }
     memcpy(text.rows[line_offset] + line_size, word_buffer, word_size);
     text.number_of_lines = line_offset + 1;
+    // initialize last line empty
     return text;
 }
 
@@ -188,12 +202,12 @@ void justifyText(Text text, int col_w)
     int leftover = 0;
     // distribute is used to know the minimum spaces between every word in a line
     int distribute = 0;
-
     // for every line in a text
     while (line_offset < text.number_of_lines)
     {
         int i = 0;
         char *string = calloc((col_w + 1), sizeof(char) * 4);
+
         while (i <= strlen(text.rows[line_offset]))
         {
             // count the spaces
@@ -279,6 +293,7 @@ Text journalText(Text text, int lines_per_column, int sib, int col_w, int col_pe
     // i need to know how many pages i need
     int lines_per_page = lines_per_column * col_per_page;
     int number_of_pages = text.number_of_lines / lines_per_page;
+
     if (text.number_of_lines > number_of_pages * lines_per_page)
     {
         number_of_pages++; // i need one more

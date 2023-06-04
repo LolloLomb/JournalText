@@ -1,2 +1,4 @@
-final: main.c
-	gcc functions.c header.h main.c -o journal
+final:
+	gcc functions.c header.h journal.c -o journal
+clean:
+	rm journal
