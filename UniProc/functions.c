@@ -106,7 +106,7 @@ Text createText(FILE *in, int col_w)
         {
             // Space character
             // if i have enough space to add the word to the current line (considering it without the last space)
-            if (word_length + line_length <= col_w)
+            if (word_length + line_length - 1<= col_w)
             {
                 memcpy(line_buffer + line_size, word_buffer, word_size);
                 line_size += word_size;
@@ -208,7 +208,7 @@ void justifyText(Text text, int col_w)
         int i = 0;
         char *string = calloc((col_w + 1), sizeof(char) * 4);
 
-        while (i <= strlen(text.rows[line_offset]))
+        while (i <= (int) strlen(text.rows[line_offset]))
         {
             // count the spaces
             // number of spaces to be redistributed is #32 + #0
@@ -236,7 +236,7 @@ void justifyText(Text text, int col_w)
         // jump is a counter that increase its value during the construction of the justified line
         int jump = 0;
 
-        for (i = 0; i < strlen(text.rows[line_offset]); i++)
+        for (i = 0; i < (int) strlen(text.rows[line_offset]); i++)
         {
 
             if (text.rows[line_offset][i] != ' ')
@@ -322,7 +322,6 @@ Text journalText(Text text, int lines_per_column, int sib, int col_w, int col_pe
     int current_string = 0;
     int current_char = 0;
     int current_page = 0;
-    char *s;
     // i need to manage every page
     while (current_page < number_of_pages)
     {
